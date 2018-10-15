@@ -9,80 +9,68 @@ class MyStream : public sf::SoundStream
 {
 public:
 
-    void load(const sf::SoundBuffer& buffer)
+	void loadFile(std::string fileName)
+	{
+		//if we cannot open the file :
+		if (!m_file.openFromFile(fileName))
+			std::cout << "error occured while opening audio file";
+		// Print the sound attributes
+		std::cout << "duration: " << m_file.getDuration().asSeconds() << std::endl;
+		std::cout << "channels: " << m_file.getChannelCount() << std::endl;
+		std::cout << "sample rate: " << m_file.getSampleRate() << std::endl;
+        //total number of audio sample in the file
+		std::cout << "sample count: " << m_file.getSampleCount() << std::endl;
+		
+        //dynamically allocate m_sample
+        //The size of m_sample is allways of one second of music
+        //so, the number of elements in the array is equal to the sampleRate
+        m_samples = (sf::Int16*) malloc(sizeof(sf::Int16) * m_file.getSampleRate());
+
+        initialize(m_file.getChannelCount(), m_file.getSampleRate());
+	}
+    void displayStream()
     {
-        // extract the audio samples from the sound buffer to our own container
-        m_samples.assign(buffer.getSamples(), buffer.getSamples() + buffer.getSampleCount());
+        Chunk data;
+        onGetData(data);
 
-        // reset the current playing position
-        m_currentSample = 0;
-
-        // initialize the base class
-        initialize(buffer.getChannelCount(), buffer.getSampleRate());
+        //for(int i = 0 ; i < data.
     }
-
-    void displayExtremsValuesBuffer()
-    {
-      int maxi = 0;
-      int mini = 0;
-      for(unsigned int i = 0 ; i < m_samples.size() ; i++)
-      {
-        if(maxi < m_samples[i] )
-          maxi = m_samples[i];
-        if(mini > m_samples[i])
-          mini = m_samples[i];
-      }
-      std::cout << "max : " << maxi << " min : " << mini << std::endl;
-    }
-
-    void applyLPF()
-    {
-      //int maxi = 16384;
-      float Beta = 0.025;
-      std::vector<sf::Int16> x;//this is the input data and m_samples the exit
-
-      for(unsigned int i = 0 ; i < m_samples.size() ; i++)
-      {
-        x.push_back(m_samples[i]);
-      }
-
-      for(unsigned int i = 1 ; i < m_samples.size() ; i++)
-      {
-        m_samples[i] = Beta*x[i] + (1-Beta)*m_samples[i-1];
-        //m_samples[i] = 0.5 * ( x[i] + m_samples[i] );
-      }
-    }
-
 
 private:
 
     virtual bool onGetData(Chunk& data)
     {
-        // number of samples to stream every time the function is called;
-        // in a more robust implementation, it should be a fixed
-        // amount of time rather than an arbitrary number of samples
-        const int samplesToStream = 50000;
+        sf::Uint64 number_sample_read; 
+        //Param : 1 pointer to the array to fill
+        //        2 number of sample to read (if the file is not finished) (i.e. size of the array)
+        //          here we send the sampleRate to read exactly 1 second of music
+        //return : the number of sample actually read
+        number_sample_read = m_file.read(m_samples, getSampleRate());
 
-        // set the pointer to the next audio samples to be played
-        data.samples = &m_samples[m_currentSample];
+        //Put the pointer to the new audio sample to be played
+        data.samples = m_samples;
 
+        //if(number_sample_read == 0)
+        /*
+        
         // have we reached the end of the sound?
-        if (m_currentSample + samplesToStream <= m_samples.size())
+        if (m_currentSample + m_sampleRate <= m_samples.size())
         {
             // end not reached: stream the samples and continue
-            data.sampleCount = samplesToStream;
-            m_currentSample += samplesToStream;
+            data.sampleCount = m_sampleRate;
+            m_currentSample += m_sampleRate;
             return true;
         }
-        else
+        else//we haven't reached the end
         {
             // end of stream reached: stream the remaining samples and stop playback
             data.sampleCount = m_samples.size() - m_currentSample;
             //m_currentSample = m_samples.size();
             //if we want to loop
             m_currentSample = 0;
-            return false;
+            return false;//playback will stop
         }
+        */
     }
 
     virtual void onSeek(sf::Time timeOffset)
@@ -91,21 +79,24 @@ private:
         m_currentSample = static_cast<std::size_t>(timeOffset.asSeconds() * getSampleRate() * getChannelCount());
     }
 
-    std::vector<sf::Int16> m_samples;
-    std::size_t m_currentSample;
-    std::string m_fileName;
+    //We need to have the file as member of this class
+    sf::InputSoundFile m_file;
+    sf::Int16*         m_samples;
+    std::size_t        m_currentSample;
+    std::string        m_fileName;
 };
 
 
 //This works !
 void LPF_test()
 {
+	/*
   // load an audio buffer from a sound file
   sf::SoundBuffer buffer;
   buffer.loadFromFile("Track 10.wav");
 
   // initialize and play the custom stream
-  MyStream stream;
+  MyStream stream();
   stream.load(buffer);
   stream.applyLPF();
   stream.play();
@@ -113,54 +104,14 @@ void LPF_test()
   // let it play until it is finished
   while (stream.getStatus() == MyStream::Playing)
       sf::sleep(sf::seconds(0.1f));
+      */
 }
 
-//
-void generate_squareWave()
+
+
+void stream_audio()
 {
-  sf::SoundBuffer squareWave;
-
-  std::vector<sf::Int16> samples;
-
-
-  sf::Uint64 sampleRate = 44000;
-  int channelCount = 2;
-  unsigned int n_sample_per_period;
-  int freq = 440;
-
-  //Initialization of the array of samples
-  //Note : the array contain 44000 numbers = sampleRate, thus it corresponds to one second
-  n_sample_per_period = sampleRate/freq;
-  for(unsigned int i = 0 ; i < sampleRate ; i++)
-  {
-    if(i % n_sample_per_period < n_sample_per_period / 2)
-      samples.push_back(0);
-    else
-      samples.push_back(VOL_MAX);
-  }
-
-  //Loading the array into the buffer
-  if( squareWave.loadFromSamples(samples.data(), sampleRate, channelCount, sampleRate) )//it looks like this works
-  {
-    std::cout << "good" << std::endl;
-  }
-  else
-    std::cout << "bad" << std::endl;
-
-  MyStream stream;
-  stream.load(squareWave);
-  std::cout << "turfu5"<< std::endl;
-
-  stream.play();
-  //int wait;
-  //std::cin >> wait;
-  std::cout << "turfu6"<< std::endl;
-
-  // let it play until it is finished
-  while (stream.getStatus() == MyStream::Playing)
-      sf::sleep(sf::seconds(0.1f));
-
-
+	//stream.play();
 }
 
 
@@ -169,7 +120,11 @@ int main()
 {
     //generate_squareWave();
 
-	LPF_test();
+	//LPF_test();
+    MyStream str;
+    str.loadFile("Track 10.wav");
+    str.play();
 
     return 0;
 }
+  
