@@ -15,18 +15,12 @@ public:
 		//if we cannot open the file :
 		if (!m_file.openFromFile(fileName))
 			std::cout << "error occured while opening audio file";
-		// Print the sound attributes
-		std::cout << "duration: " << m_file.getDuration().asSeconds() << std::endl;
-		std::cout << "channels: " << m_file.getChannelCount() << std::endl;
-		std::cout << "sample rate: " << m_file.getSampleRate() << std::endl;
-        //total number of audio sample in the file
-		std::cout << "sample count: " << m_file.getSampleCount() << std::endl;
 		
         //dynamically allocate m_sample
         //The size of m_sample is allways of one second of music
         //so, the number of elements in the array is equal to the sampleRate
         m_samples = (sf::Int16*) malloc(sizeof(sf::Int16) * m_file.getSampleRate());
-
+        //initialize the channel count and sampleRate
         initialize(m_file.getChannelCount(), m_file.getSampleRate());
 	}
     void displayStream()
@@ -41,18 +35,17 @@ private:
 
     virtual bool onGetData(Chunk& data)
     {
-        sf::Uint64 number_sample_read; 
-        
-
         //Param : 1 pointer to the array to fill
         //        2 number of sample to read (if the file is not finished) (i.e. size of the array)
         //          here we send the sampleRate to read exactly 1 second of music
         //return : the number of sample actually read
         
-        number_sample_read = m_file.read(m_samples, getSampleRate());//have to know if this works
+        m_file.read(m_samples, getSampleRate());
 
         //Put the pointer to the new audio sample to be played
         data.samples = m_samples;
+        data.sampleCount = getSampleRate();
+        return true;
 
         //if(number_sample_read == 0)
         /*
@@ -118,23 +111,14 @@ void stream_audio()
 	//stream.play();
 }
 
-
-
-int main()
+void playSongWithEvents()
 {
-    //LPF_test();
-    
-    /*
-    MyStream str;
-    str.loadFile("Track 10.wav");
-    str.play();
-    */
-    
+
     sf::InputSoundFile file;
     file.openFromFile("start.wav");
     uint channelCount = file.getChannelCount();
     uint sampleRate = file.getSampleRate();
-   
+    
     //we can't file directly a buffer with this method
     //and inputFile has only one read method... 
     //so i fill an array of samples
@@ -157,6 +141,24 @@ int main()
 
         std::cin >> wait;
     }
+
+}
+
+int main()
+{
+    //LPF_test();
+    
+    
+    MyStream str;
+    str.loadFile("start.wav");
+    str.play();
+    //WARNING : if there's no wait function (ie the main thread finish before the playing one) the program crash 
+    //          "pure virtual method called (probably the destructor...) 
+    //          terminate called without an exception
+    //          Aborted (core dumped)"
+    int wait;
+    std::cin >> wait;
+
     return 0;
 }
   
