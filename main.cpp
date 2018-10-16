@@ -135,31 +135,28 @@ int main()
     uint channelCount = file.getChannelCount();
     uint sampleRate = file.getSampleRate();
    
-
-    sf::Int16 samples[BUFFER_SIZE];
     //we can't file directly a buffer with this method
     //and inputFile has only one read method... 
     //so i fill an array of samples
-    sf::Uint64 samplesActuallyRead = file.read(samples, BUFFER_SIZE);
-    /*
-    for(uint i = 0 ; i < samplesActuallyRead ; ++i)
-    {
-        std::cout << samples[i]<< " ";
-    }*/
-
-
-    //then create a buffer with it
+    sf::Int16 samples[BUFFER_SIZE];
     sf::SoundBuffer buffer;
-    buffer.loadFromSamples(samples, BUFFER_SIZE, channelCount, sampleRate);
-
-    //then load the buffer in a sound
     sf::Sound mySound;
-    mySound.setBuffer(buffer);
-    mySound.play();
-
     int wait;
-    std::cin >> wait;
 
+    while(1)
+    {
+        //read the file and fill raw samples array
+        file.read(samples, BUFFER_SIZE);
+        //fill the buffer with the samples
+        buffer.loadFromSamples(samples, BUFFER_SIZE, channelCount, sampleRate);
+        //link the buffer to the Sound object
+        mySound.setBuffer(buffer);
+        //play
+        mySound.play();
+
+
+        std::cin >> wait;
+    }
     return 0;
 }
   
