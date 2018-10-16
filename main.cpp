@@ -3,6 +3,7 @@
 #include <iostream>
 
 #define VOL_MAX 100
+#define BUFFER_SIZE 100000
 
 // custom audio stream that plays a loaded buffer
 class MyStream : public sf::SoundStream
@@ -41,11 +42,14 @@ private:
     virtual bool onGetData(Chunk& data)
     {
         sf::Uint64 number_sample_read; 
+        
+
         //Param : 1 pointer to the array to fill
         //        2 number of sample to read (if the file is not finished) (i.e. size of the array)
         //          here we send the sampleRate to read exactly 1 second of music
         //return : the number of sample actually read
-        number_sample_read = m_file.read(m_samples, getSampleRate());
+        
+        number_sample_read = m_file.read(m_samples, getSampleRate());//have to know if this works
 
         //Put the pointer to the new audio sample to be played
         data.samples = m_samples;
@@ -118,12 +122,43 @@ void stream_audio()
 
 int main()
 {
-    //generate_squareWave();
-
-	//LPF_test();
+    //LPF_test();
+    
+    /*
     MyStream str;
     str.loadFile("Track 10.wav");
     str.play();
+    */
+    
+    sf::InputSoundFile file;
+    file.openFromFile("start.wav");
+    uint channelCount = file.getChannelCount();
+    uint sampleRate = file.getSampleRate();
+   
+
+    sf::Int16 samples[BUFFER_SIZE];
+    //we can't file directly a buffer with this method
+    //and inputFile has only one read method... 
+    //so i fill an array of samples
+    sf::Uint64 samplesActuallyRead = file.read(samples, BUFFER_SIZE);
+    /*
+    for(uint i = 0 ; i < samplesActuallyRead ; ++i)
+    {
+        std::cout << samples[i]<< " ";
+    }*/
+
+
+    //then create a buffer with it
+    sf::SoundBuffer buffer;
+    buffer.loadFromSamples(samples, BUFFER_SIZE, channelCount, sampleRate);
+
+    //then load the buffer in a sound
+    sf::Sound mySound;
+    mySound.setBuffer(buffer);
+    mySound.play();
+
+    int wait;
+    std::cin >> wait;
 
     return 0;
 }
