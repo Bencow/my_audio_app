@@ -11,6 +11,7 @@
 
 
 
+
 //This works !
 /*
 void LPF_test()
@@ -80,9 +81,7 @@ void playSongWithEvents()
 
 int main()
 {
-    //LPF_test();
-    
-    MyStream str;
+    /*MyStream str;
     str.loadFile("start.wav");
     str.play();
     //WARNING : if there's no wait function (ie the main thread finish before the playing one) the program crash 
@@ -91,7 +90,17 @@ int main()
     //          Aborted (core dumped)"
     int wait;
     std::cin >> wait;
+    */
 
+    int* arr = (int*)malloc(sizeof(int)* 5);
+    for(int i = 0 ; i < 5 ; ++i)
+    {
+      arr[i] = 1043;
+    }
+    for(int i = 0 ; i < 6 ; ++i)
+    {
+      std::cout << arr[i] << " ";
+    }
     return 0;
 }
   

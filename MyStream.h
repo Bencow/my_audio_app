@@ -24,7 +24,10 @@ private:
 
     //We need to have the file as member of this class
     sf::InputSoundFile m_file;
-    sf::Int16* m_samples;
+    sf::Int16* m_data_in;
+    sf::Int16 m_previous_sample;
+    sf::Int16* m_data_out;
+   	size_t m_sample_number;
     std::size_t m_currentSample;
     
     // 1: volume
