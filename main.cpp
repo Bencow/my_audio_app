@@ -35,21 +35,41 @@ private:
 
     virtual bool onGetData(Chunk& data)
     {
+        uint number_sample_read;
         //Param : 1 pointer to the array to fill
         //        2 number of sample to read (if the file is not finished) (i.e. size of the array)
         //          here we send the sampleRate to read exactly 1 second of music
         //return : the number of sample actually read
         
-        m_file.read(m_samples, getSampleRate());
-
+        number_sample_read = m_file.read(m_samples, getSampleRate());
         //Put the pointer to the new audio sample to be played
         data.samples = m_samples;
         data.sampleCount = getSampleRate();
-        return true;
 
-        //if(number_sample_read == 0)
-        /*
         
+        if(number_sample_read == 0)
+        {
+            return false;
+        }
+
+        return true;
+        
+        
+        //Have we reached the end of the file
+        /*
+        if(m_file.getSampleOffset() + getSampleRate() <= m_file.getSampleCount())
+        {
+            data.sampleCount = getSampleRate();
+            return true;
+        }
+        else//the end of the file is reached
+        {
+            //read what's left
+            data.sampleCount = m_file.getSampleCount() - m_file.getSampleOffset();
+            return false;//stop playback
+        }
+        */
+        /*
         // have we reached the end of the sound?
         if (m_currentSample + m_sampleRate <= m_samples.size())
         {
@@ -80,7 +100,6 @@ private:
     sf::InputSoundFile m_file;
     sf::Int16*         m_samples;
     std::size_t        m_currentSample;
-    std::string        m_fileName;
 };
 
 
@@ -131,6 +150,15 @@ void playSongWithEvents()
     {
         //read the file and fill raw samples array
         file.read(samples, BUFFER_SIZE);
+
+
+        //WHY "class sf::InputSoundFile’ has no member named ‘getSampleOffset’"
+        ////////////////////////////
+        file.getSampleCount();
+        //file.getSampleOffset();   //
+        ////////////////////////////
+
+
         //fill the buffer with the samples
         buffer.loadFromSamples(samples, BUFFER_SIZE, channelCount, sampleRate);
         //link the buffer to the Sound object
@@ -141,7 +169,6 @@ void playSongWithEvents()
 
         std::cin >> wait;
     }
-
 }
 
 int main()
