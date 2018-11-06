@@ -13,6 +13,10 @@ void MyStream::loadFile(std::string fileName)
    m_samples = (sf::Int16*) malloc(sizeof(sf::Int16) * m_file.getSampleRate());
    //initialize the channel count and sampleRate
    initialize(m_file.getChannelCount(), m_file.getSampleRate());
+
+   //other initialization should not be there after...
+   m_current_effect = 2;//LPF
+
 }
 
 bool MyStream::onGetData(Chunk& data)
@@ -24,9 +28,8 @@ bool MyStream::onGetData(Chunk& data)
    //return : the number of sample actually read
    number_sample_read = m_file.read(m_samples, getSampleRate());
 
-
-
-
+   //apply the current effect on m_samples
+   applyEffect();
 
    //Put the pointer to the new audio sample to be played
    data.samples = m_samples;
@@ -44,4 +47,26 @@ void MyStream::onSeek(sf::Time timeOffset)
 {
     // compute the corresponding sample index according to the sample rate and channel count
     m_currentSample = static_cast<std::size_t>(timeOffset.asSeconds() * getSampleRate() * getChannelCount());
+}
+
+void MyStream::applyEffect()
+{
+   switch(m_current_effect)
+   {
+      case 1:
+         volumeControl();
+         break;
+      case 2:
+         applyLPF();
+         break;
+
+   }
+}
+void MyStream::volumeControl()
+{
+
+}
+void MyStream::applyLPF()
+{
+   
 }

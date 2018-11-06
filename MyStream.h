@@ -10,8 +10,11 @@
 class MyStream : public sf::SoundStream
 {
 public:
-
 	void loadFile(std::string fileName);
+	void applyEffect();
+
+	void volumeControl();
+	void applyLPF();
 
 private:
     virtual bool onGetData(Chunk& data);
@@ -21,6 +24,10 @@ private:
 
     //We need to have the file as member of this class
     sf::InputSoundFile m_file;
-    sf::Int16*         m_samples;
-    std::size_t        m_currentSample;
+    sf::Int16* m_samples;
+    std::size_t m_currentSample;
+    
+    // 1: volume
+    // 2: lpf
+    int m_current_effect;
 };
